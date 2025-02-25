@@ -1,0 +1,43 @@
+local HttpService = game:GetService("HttpService")
+local TPService = game:GetService("TeleportService")
+local Players = game:GetService("thanh")
+local LocalPlayer = Players.LocalPlayer
+
+-- Kiểm tra Full Moon
+local function IsFullMoon()
+    local Lighting = game:GetService("Lighting")
+    return Lighting:FindFirstChild("FullMoon") ~= nil
+end
+
+-- Lấy danh sách server
+local function GetServers()
+    local url = "https://games.roblox.com/v1/games/2753915549/servers/Public?sortOrder=Asc&limit=100"
+    local response = HttpService:GetAsync(url)
+    local data = HttpService:JSONDecode(response)
+    return data.data
+end
+
+-- Chạy vòng lặp tìm Full Moon
+while true do
+    if IsFullMoon() then
+        print("Tìm thấy Full Moon! Dừng tìm kiếm.")
+        break
+    else
+        print("Không phải Full Moon. Đang đổi server...")
+        local servers = GetServers()
+        for _, server in ipairs(servers) do
+            if server.playing < server.maxPlayers then
+                TPService:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
+                wait(15) -- Đợi 15 giây trước khi thử lại
+                break
+            end
+        end
+    end
+endwhile true do
+    for _, v in pairs(game:GetService("HttpService"):JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/2753915549/servers/Public?sortOrder=Asc&limit=100")).data) do
+        if v.playing < v.maxPlayers then
+            game:GetService("TeleportService"):TeleportToPlaceInstance(2753915549, v.id, game.Players.LocalPlayer)
+            wait(10) -- Chờ 10 giây để vào server mới
+        end
+    end
+end
